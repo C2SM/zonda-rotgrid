@@ -5,26 +5,19 @@ import xarray as xr
 from pyproj import CRS, Transformer
 
 
-def compute_vertices(grid, step):
-    lower = grid - step / 2
-    upper = grid + step / 2
-    return np.stack([
-        (lower, lower),
-        (lower, upper),
-        (upper, upper),
-        (upper, lower),
-    ], axis=0).transpose((2, 3, 0))
+def compute_corner_offsets(step_x, step_y):
+    half_x = step_x / 2
+    half_y = step_y / 2
+    return np.array([
+        [-half_x, -half_y],  # SW
+        [-half_x,  half_y],  # NW
+        [ half_x,  half_y],  # NE
+        [ half_x, -half_y],  # SE
+    ])  # shape: (4, 2)
 
 
 def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, pole_lat, pole_lon, output_path):
-    # Compute number of grid points
-    nlat = int(round((2 * hwidth_lat) / dy)) + 1
-    nlon = int(round((2 * hwidth_lon) / dx)) + 1
-
-    rlat = np.linspace(-hwidth_lat, hwidth_lat, nlat)
-    rlon = np.linspace(-hwidth_lon, hwidth_lon, nlon)
-    rlon2d, rlat2d = np.meshgrid(rlon, rlat)
-
+    # Define CRS
     rotated_crs = CRS.from_cf({
         'grid_mapping_name': 'rotated_latitude_longitude',
         'grid_north_pole_latitude': pole_lat,
@@ -32,32 +25,49 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
         'north_pole_grid_longitude': 0.0
     })
     geographic_crs = CRS.from_epsg(4326)
-    transformer = Transformer.from_crs(rotated_crs, geographic_crs, always_xy=True)
 
+    # Transform center from geographic to rotated
+    transformer_geo2rot = Transformer.from_crs(geographic_crs, rotated_crs, always_xy=True)
+    center_rlon, center_rlat = transformer_geo2rot.transform(center_lon, center_lat)
+
+    # Compute number of points
+    nlat = int(round((2 * hwidth_lat) / dy)) + 1
+    nlon = int(round((2 * hwidth_lon) / dx)) + 1
+
+    rlat = np.linspace(center_rlat - hwidth_lat, center_rlat + hwidth_lat, nlat)
+    rlon = np.linspace(center_rlon - hwidth_lon, center_rlon + hwidth_lon, nlon)
+    rlon2d, rlat2d = np.meshgrid(rlon, rlat)
+
+    # Transform to geographic coordinates
+    transformer = Transformer.from_crs(rotated_crs, geographic_crs, always_xy=True)
     lon_flat, lat_flat = transformer.transform(rlon2d.flatten(), rlat2d.flatten())
     lon = lon_flat.reshape(rlon2d.shape)
     lat = lat_flat.reshape(rlat2d.shape)
 
+    # Compute corner coordinates
+    corner_offsets = compute_corner_offsets(dx, dy)
+    ny, nx = rlon2d.shape
     nv = 4
-    rlon_vertices = compute_vertices(rlon2d, dx)
-    rlat_vertices = compute_vertices(rlat2d, dy)
+    lon_vertices = np.empty((ny, nx, nv))
+    lat_vertices = np.empty((ny, nx, nv))
 
-    lon_vertices = np.empty(rlon2d.shape + (nv,))
-    lat_vertices = np.empty(rlat2d.shape + (nv,))
     for i in range(nv):
-        flat_lon, flat_lat = transformer.transform(
-            rlon_vertices[:, :, i].flatten(),
-            rlat_vertices[:, :, i].flatten()
-        )
-        lon_vertices[:, :, i] = flat_lon.reshape(rlon2d.shape)
-        lat_vertices[:, :, i] = flat_lat.reshape(rlat2d.shape)
+        dlon = corner_offsets[i, 0]
+        dlat = corner_offsets[i, 1]
+        rlon_corner = rlon2d + dlon
+        rlat_corner = rlat2d + dlat
+        flat_rlon = rlon_corner.flatten()
+        flat_rlat = rlat_corner.flatten()
+        flat_lon, flat_lat = transformer.transform(flat_rlon, flat_rlat)
+        lon_vertices[:, :, i] = flat_lon.reshape((ny, nx))
+        lat_vertices[:, :, i] = flat_lat.reshape((ny, nx))
 
+    # Dummy variable
     dummy = np.zeros_like(lat)
 
+    # Create dataset
     ds = xr.Dataset(
         {
-            "rlon": (["rlon"], rlon),
-            "rlat": (["rlat"], rlat),
             "lon": (["rlat", "rlon"], lon),
             "lat": (["rlat", "rlon"], lat),
             "lon_vertices": (["rlat", "rlon", "nv"], lon_vertices),
@@ -65,12 +75,13 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
             "dummy": (["rlat", "rlon"], dummy),
         },
         coords={
-            "rlon": rlon,
-            "rlat": rlat,
-            "nv": np.arange(nv),
+            "rlon": ("rlon", rlon),
+            "rlat": ("rlat", rlat),
+            "nv": ("nv", np.arange(nv)),
         },
     )
 
+    # Add attributes
     ds["rlon"].attrs.update({
         "standard_name": "grid_longitude",
         "long_name": "rotated longitudes",
@@ -116,8 +127,9 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
         }
     )
 
+    # Save to NetCDF
     ds.to_netcdf(output_path)
-    print(f"File '{output_path}' created.")
+    print(f"✅ File '{output_path}' created.")
 
 
 def main():
