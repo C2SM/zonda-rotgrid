@@ -3,8 +3,7 @@ from .core import create_rotated_grid
 
 def main():
     parser = argparse.ArgumentParser(description="Generate a rotated coordinate grid NetCDF file for climate models.")
-    parser.add_argument("--dx", type=float, required=True, help="Grid spacing in x (longitude) direction [km]")
-    parser.add_argument("--dy", type=float, required=True, help="Grid spacing in y (latitude) direction [km]")
+    parser.add_argument("--grid_spacing", type=float, required=True, help="Grid spacing in horizontal direction [km]")
     parser.add_argument("--center_lat", type=float, required=True, help="Center latitude of the domain")
     parser.add_argument("--center_lon", type=float, required=True, help="Center longitude of the domain")
     parser.add_argument("--hwidth_lat", type=float, required=True, help="Half-width of domain in latitude [degrees]")
@@ -17,8 +16,7 @@ def main():
     args = parser.parse_args()
 
     create_rotated_grid(
-        dx=args.dx,
-        dy=args.dy,
+        grid_spacing=args.grid_spacing,
         center_lat=args.center_lat,
         center_lon=args.center_lon,
         hwidth_lat=args.hwidth_lat,

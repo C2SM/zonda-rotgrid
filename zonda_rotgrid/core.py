@@ -12,10 +12,11 @@ def compute_corner_offsets(step_x_deg, step_y_deg):
         [ half_x, -half_y],  # SE
     ])  # shape: (4, 2)
 
-def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, pole_lat, pole_lon, ncells_boundary, output_path):
-    degree_per_km = 1.0 / 111.2  # 1 degree ≈ 111.2 km
-    dx_deg = dx * degree_per_km
-    dy_deg = dy * degree_per_km
+def create_rotated_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth_lon, pole_lat, pole_lon, ncells_boundary, output_path):
+    # Convert grid spacing from km to degrees 
+    dx_deg = grid_spacing / 111.320 
+    dy_deg = grid_spacing / 110.574
+
     polgam = 0.0  # Default value for north pole grid longitude
     rotated_crs = CRS.from_cf({
         'grid_mapping_name': 'rotated_latitude_longitude',
