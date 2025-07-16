@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="zonda_rotgrid",
-    version="0.1.0",
+    version="0.1.1",
     description="Generate rotated coordinate grid NetCDF files for climate models based on Zonda input.",
     author="C2SM",
     license="MIT",
