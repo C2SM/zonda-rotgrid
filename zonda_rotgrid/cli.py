@@ -1,12 +1,5 @@
-#!/usr/bin/env python3
-"""
-Thin wrapper to run the zonda_rotgrid CLI from the command line.
-"""
-
-from zonda_rotgrid.cli import main
-
-if __name__ == "__main__":
-    main()
+import argparse
+from .core import create_rotated_grid
 
 def main():
     parser = argparse.ArgumentParser(description="Generate a rotated coordinate grid NetCDF file for climate models.")
@@ -35,7 +28,3 @@ def main():
         ncells_boundary=args.ncells_boundary,
         output_path=args.output
     )
-
-
-if __name__ == "__main__":
-    main()
