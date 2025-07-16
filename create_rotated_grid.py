@@ -16,7 +16,7 @@ def compute_corner_offsets(step_x_deg, step_y_deg):
     ])  # shape: (4, 2)
 
 
-def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, pole_lat, pole_lon, output_path):
+def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, pole_lat, pole_lon, ncells_boundary, output_path):
     # Convert grid spacing from km to degrees (approximate)
     degree_per_km = 1.0 / 111.2  # 1 degree ≈ 111.2 km
     dx_deg = dx * degree_per_km
@@ -27,7 +27,7 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
         'grid_mapping_name': 'rotated_latitude_longitude',
         'grid_north_pole_latitude': pole_lat,
         'grid_north_pole_longitude': pole_lon,
-        'north_pole_grid_longitude': 0.0
+        'north_pole_grid_longitude': 90.0
     })
     geographic_crs = CRS.from_epsg(4326)
 
@@ -35,9 +35,9 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
     transformer_geo2rot = Transformer.from_crs(geographic_crs, rotated_crs, always_xy=True)
     center_rlon, center_rlat = transformer_geo2rot.transform(center_lon, center_lat)
 
-    # Compute number of points
-    nlat = int(round((2 * hwidth_lat) / dy_deg)) + 1
-    nlon = int(round((2 * hwidth_lon) / dx_deg)) + 1
+    # Compute number of points, taking offset into account
+    nlat = int(round((2 * hwidth_lat) / dy_deg)) + 1 - 2 * ncells_boundary
+    nlon = int(round((2 * hwidth_lon) / dx_deg)) + 1 - 2 * ncells_boundary
 
     rlat = np.linspace(center_rlat - hwidth_lat, center_rlat + hwidth_lat, nlat)
     rlon = np.linspace(center_rlon - hwidth_lon, center_rlon + hwidth_lon, nlon)
@@ -128,7 +128,7 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
             "grid_mapping_name": "rotated_latitude_longitude",
             "grid_north_pole_longitude": pole_lon,
             "grid_north_pole_latitude": pole_lat,
-            "north_pole_grid_longitude": 0.0
+            "north_pole_grid_longitude": -180.0
         }
     )
 
@@ -147,6 +147,7 @@ def main():
     parser.add_argument("--hwidth_lon", type=float, required=True, help="Half-width of domain in longitude [degrees]")
     parser.add_argument("--pole_lat", type=float, required=True, help="Rotated pole latitude")
     parser.add_argument("--pole_lon", type=float, required=True, help="Rotated pole longitude")
+    parser.add_argument("--ncells_boundary", type=int, required=True, help="Lateral boundary cells to be removed")
     parser.add_argument("--output", type=str, required=True, help="Output NetCDF file path")
 
     args = parser.parse_args()
@@ -160,6 +161,7 @@ def main():
         hwidth_lon=args.hwidth_lon,
         pole_lat=args.pole_lat,
         pole_lon=args.pole_lon,
+        ncells_boundary=args.ncells_boundary,
         output_path=args.output
     )
 

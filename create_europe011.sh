@@ -7,4 +7,5 @@
   --hwidth_lon 24.365 \
   --pole_lat 39.25 \
   --pole_lon -162.0 \
+  --ncells_boundary 16 \
   --output europe011_rotated_grid.nc
