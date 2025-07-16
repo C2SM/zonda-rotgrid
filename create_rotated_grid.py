@@ -22,12 +22,14 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
     dx_deg = dx * degree_per_km
     dy_deg = dy * degree_per_km
 
+    polgam = 0.0  # Default value for north pole grid longitude
+
     # Define CRS
     rotated_crs = CRS.from_cf({
         'grid_mapping_name': 'rotated_latitude_longitude',
         'grid_north_pole_latitude': pole_lat,
         'grid_north_pole_longitude': pole_lon,
-        'north_pole_grid_longitude': 90.0
+        'north_pole_grid_longitude': polgam
     })
     geographic_crs = CRS.from_epsg(4326)
 
@@ -128,7 +130,7 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
             "grid_mapping_name": "rotated_latitude_longitude",
             "grid_north_pole_longitude": pole_lon,
             "grid_north_pole_latitude": pole_lat,
-            "north_pole_grid_longitude": -180.0
+            "north_pole_grid_longitude": polgam,
         }
     )
 
