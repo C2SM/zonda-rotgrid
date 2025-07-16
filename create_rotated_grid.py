@@ -5,9 +5,9 @@ import xarray as xr
 from pyproj import CRS, Transformer
 
 
-def compute_corner_offsets(step_x, step_y):
-    half_x = step_x / 2
-    half_y = step_y / 2
+def compute_corner_offsets(step_x_deg, step_y_deg):
+    half_x = step_x_deg / 2
+    half_y = step_y_deg / 2
     return np.array([
         [-half_x, -half_y],  # SW
         [-half_x,  half_y],  # NW
@@ -17,6 +17,11 @@ def compute_corner_offsets(step_x, step_y):
 
 
 def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, pole_lat, pole_lon, output_path):
+    # Convert grid spacing from km to degrees (approximate)
+    degree_per_km = 1.0 / 111.2  # 1 degree ≈ 111.2 km
+    dx_deg = dx * degree_per_km
+    dy_deg = dy * degree_per_km
+
     # Define CRS
     rotated_crs = CRS.from_cf({
         'grid_mapping_name': 'rotated_latitude_longitude',
@@ -31,8 +36,8 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
     center_rlon, center_rlat = transformer_geo2rot.transform(center_lon, center_lat)
 
     # Compute number of points
-    nlat = int(round((2 * hwidth_lat) / dy)) + 1
-    nlon = int(round((2 * hwidth_lon) / dx)) + 1
+    nlat = int(round((2 * hwidth_lat) / dy_deg)) + 1
+    nlon = int(round((2 * hwidth_lon) / dx_deg)) + 1
 
     rlat = np.linspace(center_rlat - hwidth_lat, center_rlat + hwidth_lat, nlat)
     rlon = np.linspace(center_rlon - hwidth_lon, center_rlon + hwidth_lon, nlon)
@@ -42,10 +47,10 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
     transformer = Transformer.from_crs(rotated_crs, geographic_crs, always_xy=True)
     lon_flat, lat_flat = transformer.transform(rlon2d.flatten(), rlat2d.flatten())
     lon = lon_flat.reshape(rlon2d.shape)
-    lat = lat_flat.reshape(rlat2d.shape)
+    lat = lat_flat.reshape(rlon2d.shape)
 
     # Compute corner coordinates
-    corner_offsets = compute_corner_offsets(dx, dy)
+    corner_offsets = compute_corner_offsets(dx_deg, dy_deg)
     ny, nx = rlon2d.shape
     nv = 4
     lon_vertices = np.empty((ny, nx, nv))
