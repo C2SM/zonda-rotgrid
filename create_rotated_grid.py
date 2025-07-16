@@ -32,17 +32,13 @@ def create_rotated_grid(dx, dy, center_lat, center_lon, hwidth_lat, hwidth_lon, 
         'north_pole_grid_longitude': polgam
     })
     geographic_crs = CRS.from_epsg(4326)
-
-    # Transform center from geographic to rotated
-    transformer_geo2rot = Transformer.from_crs(geographic_crs, rotated_crs, always_xy=True)
-    center_rlon, center_rlat = transformer_geo2rot.transform(center_lon, center_lat)
-
+    
     # Compute number of points, taking offset into account
     nlat = int(round((2 * hwidth_lat) / dy_deg)) + 1 - 2 * ncells_boundary
     nlon = int(round((2 * hwidth_lon) / dx_deg)) + 1 - 2 * ncells_boundary
 
-    rlat = np.linspace(center_rlat - hwidth_lat, center_rlat + hwidth_lat, nlat)
-    rlon = np.linspace(center_rlon - hwidth_lon, center_rlon + hwidth_lon, nlon)
+    rlat = np.linspace(center_lat - hwidth_lat, center_lat + hwidth_lat, nlat)
+    rlon = np.linspace(center_lon - hwidth_lon, center_lon + hwidth_lon, nlon)
     rlon2d, rlat2d = np.meshgrid(rlon, rlat)
 
     # Transform to geographic coordinates
