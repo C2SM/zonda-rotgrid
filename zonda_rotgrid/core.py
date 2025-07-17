@@ -1,6 +1,10 @@
 import numpy as np
 import xarray as xr
 from pyproj import CRS, Transformer
+try:
+    from importlib.metadata import version as pkg_version
+except ImportError:
+    from importlib_metadata import version as pkg_version  # For Python <3.8
 
 def compute_corner_offsets(step_x_deg, step_y_deg):
     half_x = step_x_deg / 2
@@ -107,6 +111,20 @@ def create_rotated_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth
             "grid_north_pole_latitude": pole_lat,
             "north_pole_grid_longitude": polgam,
         }
+    )
+    # Add meta information as global attributes
+    try:
+        version = pkg_version("zonda_rotgrid")
+    except Exception:
+        version = "unknown"
+    ds.attrs["history"] = (
+        f"Created with zonda-rotgrid v{version} on {__import__('datetime').datetime.now().isoformat()}"
+    )
+    ds.attrs["install_command"] = f"pip install zonda-rotgrid=={version}"
+    ds.attrs["creation_command"] = (
+        f"create-rotated-grid --grid_spacing {grid_spacing} --center_lat {center_lat} "
+        f"--center_lon {center_lon} --hwidth_lat {hwidth_lat} --hwidth_lon {hwidth_lon} "
+        f"--pole_lat {pole_lat} --pole_lon {pole_lon} --ncells_boundary {ncells_boundary} --output {output_path}"
     )
     ds.to_netcdf(output_path)
     print(f"✅ File '{output_path}' created.")
