@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="zonda_rotgrid",
-    version="0.1.3",
+    version="0.1.4",
     description="Generate rotated coordinate grid NetCDF files for climate models based on Zonda input.",
     author="C2SM",
     license="MIT",
