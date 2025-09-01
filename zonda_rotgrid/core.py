@@ -127,4 +127,4 @@ def create_rotated_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth
         f"--pole_lat {pole_lat} --pole_lon {pole_lon} --ncells_boundary {ncells_boundary} --output {output_path}"
     )
     ds.to_netcdf(output_path)
-    print(f"✅ File '{output_path}' created.")
+    print(f"File '{output_path}' created.")
