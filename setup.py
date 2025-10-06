@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="zonda_rotgrid",
-    version="0.1.5",
+    version="0.2.0",
     description="Generate rotated coordinate grid NetCDF files for climate models based on Zonda input.",
     author="C2SM",
     license="MIT",
@@ -17,7 +17,8 @@ setup(
     ],
     entry_points={
         "console_scripts": [
-            "create-rotated-grid=zonda_rotgrid.cli:main"
+            "create-rotated-grid=zonda_rotgrid.cli:main_rotated",
+            "create-latlon-grid=zonda_rotgrid.cli:main_latlon"
         ]
     },
     python_requires=">=3.7",

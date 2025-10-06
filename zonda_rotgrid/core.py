@@ -128,3 +128,81 @@ def create_rotated_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth
     )
     ds.to_netcdf(output_path)
     print(f"File '{output_path}' created.")
+
+def create_latlon_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth_lon, ncells_boundary, output_path):
+    # Convert grid spacing from km to degrees
+    dx_deg = grid_spacing / 111.320
+    dy_deg = grid_spacing / 110.574
+    nlat = int(round((2 * hwidth_lat) / dy_deg)) + 1 - 2 * ncells_boundary
+    nlon = int(round((2 * hwidth_lon) / dx_deg)) + 1 - 2 * ncells_boundary
+    lat = np.linspace(center_lat - hwidth_lat, center_lat + hwidth_lat, nlat)
+    lon = np.linspace(center_lon - hwidth_lon, center_lon + hwidth_lon, nlon)
+    lon2d, lat2d = np.meshgrid(lon, lat)
+    corner_offsets = compute_corner_offsets(dx_deg, dy_deg)
+    ny, nx = lon2d.shape
+    nv = 4
+    lon_vertices = np.empty((ny, nx, nv))
+    lat_vertices = np.empty((ny, nx, nv))
+    for i in range(nv):
+        dlon = corner_offsets[i, 0]
+        dlat = corner_offsets[i, 1]
+        lon_vertices[:, :, i] = lon2d + dlon
+        lat_vertices[:, :, i] = lat2d + dlat
+    dummy = np.zeros_like(lat2d)
+    ds = xr.Dataset(
+        {
+            "dummy": (["lat", "lon"], dummy),
+            "lon_vertices": (["lat", "lon", "nv"], lon_vertices),
+            "lat_vertices": (["lat", "lon", "nv"], lat_vertices),
+        },
+        coords={
+            "lon": ("lon", lon),
+            "lat": ("lat", lat),
+            "nv": ("nv", np.arange(nv)),
+            "lon2d": (["lat", "lon"], lon2d),
+            "lat2d": (["lat", "lon"], lat2d),
+        },
+    )
+    ds["lon"].attrs.update({
+        "standard_name": "longitude",
+        "long_name": "longitude",
+        "units": "degrees_east"
+    })
+    ds["lat"].attrs.update({
+        "standard_name": "latitude",
+        "long_name": "latitude",
+        "units": "degrees_north"
+    })
+    ds["lon_vertices"].attrs.update({
+        "long_name": "longitude of vertices",
+        "units": "degrees_east"
+    })
+    ds["lat_vertices"].attrs.update({
+        "long_name": "latitude of vertices",
+        "units": "degrees_north"
+    })
+    ds["dummy"].attrs.update({
+        "coordinates": "lon lat",
+        "grid_mapping": "latitude_longitude"
+    })
+    ds["latitude_longitude"] = xr.DataArray(
+        0,
+        attrs={
+            "grid_mapping_name": "latitude_longitude"
+        }
+    )
+    try:
+        version = pkg_version("zonda_rotgrid")
+    except Exception:
+        version = "unknown"
+    ds.attrs["history"] = (
+        f"Created with zonda-rotgrid v{version} on {__import__('datetime').datetime.now().isoformat()}"
+    )
+    ds.attrs["install_command"] = f"pip install zonda-rotgrid=={version}"
+    ds.attrs["creation_command"] = (
+        f"create-latlon-grid --grid_spacing {grid_spacing} --center_lat {center_lat} "
+        f"--center_lon {center_lon} --hwidth_lat {hwidth_lat} --hwidth_lon {hwidth_lon} "
+        f"--ncells_boundary {ncells_boundary} --output {output_path}"
+    )
+    ds.to_netcdf(output_path)
+    print(f"File '{output_path}' created (lat/lon grid).")
