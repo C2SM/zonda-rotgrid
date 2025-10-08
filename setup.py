@@ -13,7 +13,10 @@ setup(
     install_requires=[
         "numpy",
         "xarray",
-        "pyproj"
+        "pyproj",
+        "netCDF4",
+        "h5netcdf",
+        "scipy"
     ],
     entry_points={
         "console_scripts": [
