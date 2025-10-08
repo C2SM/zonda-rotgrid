@@ -1,7 +1,6 @@
 # zonda-rotgrid
 
-Generate rotated coordinate grid NetCDF files for climate models based on [Zonda](https://zonda.ethz.ch/) input.
-
+Generate (rotated) latitude-longitude grid NetCDF files for climate models based on [Zonda](https://zonda.ethz.ch/) input.
 
 
 ## Installation
@@ -10,9 +9,9 @@ Generate rotated coordinate grid NetCDF files for climate models based on [Zonda
 pip install zonda-rotgrid
 ```
 
-## Usage
+## General usage
 
-After installation, you can use the command line tool for rotated (`create-rotated-grid`) or geographical (`create-latlon-grid`) grids:
+After installation, you can use the command line tool for generating rotated (`create-rotated-grid`) or geographical (`create-latlon-grid`) grids:
 
 ### Rotated grid example
 ```
@@ -45,7 +44,7 @@ optional arguments:
   --output OUTPUT       Output NetCDF file path
 ```
 
-### Geographical lat/lon grid example (European domain centered in Switzerland)
+### Geographical lat/lon grid example
 ```
 create-latlon-grid --grid_spacing 12.1 --center_lat 47.0 --center_lon 8.0 --hwidth_lat 12.0 --hwidth_lon 12.0 --ncells_boundary 16 --output latlon_grid.nc
 ```
