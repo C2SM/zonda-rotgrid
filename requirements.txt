@@ -1,3 +1,6 @@
 numpy
 xarray
 pyproj
+netCDF4
+h5netcdf
+scipy
