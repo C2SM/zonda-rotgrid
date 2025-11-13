@@ -18,7 +18,7 @@ def compute_corner_offsets(step_x_deg, step_y_deg):
 
 def create_rotated_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth_lon, pole_lat, pole_lon, ncells_boundary, output_path):
     # Convert grid spacing from km to degrees 
-    dx_deg = grid_spacing / 111.320 
+    dx_deg = grid_spacing / 111.320
     dy_deg = grid_spacing / 110.574
 
     polgam = 0.0  # Default value for north pole grid longitude
@@ -29,10 +29,22 @@ def create_rotated_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth
         'north_pole_grid_longitude': polgam
     })
     geographic_crs = CRS.from_epsg(4326)
-    nlat = int(round((2 * hwidth_lat) / dy_deg)) + 1 - 2 * ncells_boundary
-    nlon = int(round((2 * hwidth_lon) / dx_deg)) + 1 - 2 * ncells_boundary
-    rlat = np.linspace(center_lat - hwidth_lat, center_lat + hwidth_lat, nlat)
-    rlon = np.linspace(center_lon - hwidth_lon, center_lon + hwidth_lon, nlon)
+
+    # Calculate full number of points
+    nlat_full = int(round((2 * hwidth_lat) / dy_deg)) + 1
+    nlon_full = int(round((2 * hwidth_lon) / dx_deg)) + 1
+
+    # Compute full coordinate arrays
+    rlat_full = np.linspace(center_lat - hwidth_lat, center_lat + hwidth_lat, nlat_full)
+    rlon_full = np.linspace(center_lon - hwidth_lon, center_lon + hwidth_lon, nlon_full)
+
+    # Trim boundaries if requested
+    if ncells_boundary > 0:
+        rlat = rlat_full[ncells_boundary:-ncells_boundary]
+        rlon = rlon_full[ncells_boundary:-ncells_boundary]
+    else:
+        rlat = rlat_full
+        rlon = rlon_full
     rlon2d, rlat2d = np.meshgrid(rlon, rlat)
     transformer = Transformer.from_crs(rotated_crs, geographic_crs, always_xy=True)
     lon_flat, lat_flat = transformer.transform(rlon2d.flatten(), rlat2d.flatten())
@@ -133,10 +145,16 @@ def create_latlon_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth_
     # Convert grid spacing from km to degrees
     dx_deg = grid_spacing / 111.320
     dy_deg = grid_spacing / 110.574
-    nlat = int(round((2 * hwidth_lat) / dy_deg)) + 1 - 2 * ncells_boundary
-    nlon = int(round((2 * hwidth_lon) / dx_deg)) + 1 - 2 * ncells_boundary
-    lat = np.linspace(center_lat - hwidth_lat, center_lat + hwidth_lat, nlat)
-    lon = np.linspace(center_lon - hwidth_lon, center_lon + hwidth_lon, nlon)
+    nlat_full = int(round((2 * hwidth_lat) / dy_deg)) + 1
+    nlon_full = int(round((2 * hwidth_lon) / dx_deg)) + 1
+    lat_full = np.linspace(center_lat - hwidth_lat, center_lat + hwidth_lat, nlat_full)
+    lon_full = np.linspace(center_lon - hwidth_lon, center_lon + hwidth_lon, nlon_full)
+    if ncells_boundary > 0:
+        lat = lat_full[ncells_boundary:-ncells_boundary]
+        lon = lon_full[ncells_boundary:-ncells_boundary]
+    else:
+        lat = lat_full
+        lon = lon_full
     lon2d, lat2d = np.meshgrid(lon, lat)
     corner_offsets = compute_corner_offsets(dx_deg, dy_deg)
     ny, nx = lon2d.shape
