@@ -13,14 +13,20 @@ pip install zonda-rotgrid
 
 After installation, you can use the command line tool for generating rotated (`create-rotated-grid`) or geographical (`create-latlon-grid`) grids:
 
-### Rotated grid example
+
+### Rotated grid example (using grid spacing in km)
 ```
 create-rotated-grid --grid_spacing 12.1 --center_lat -0.77 --center_lon -5.11 --hwidth_lat 25.025 --hwidth_lon 24.365 --pole_lat 39.25 --pole_lon -162 --ncells_boundary 16 --output rotated_grid.nc
 ```
 
+### Rotated grid example (using dlon/dlat in degrees)
+```
+create-rotated-grid --dlon 0.11 --dlat 0.11 --center_lat -0.77 --center_lon -5.11 --hwidth_lat 25.025 --hwidth_lon 24.365 --pole_lat 39.25 --pole_lon -162 --ncells_boundary 0 --output EUR-11_rotated.nc
+```
+
 #### Usage
 ```
-usage: create-rotated-grid [-h] --grid_spacing GRID_SPACING --center_lat CENTER_LAT --center_lon CENTER_LON --hwidth_lat HWIDTH_LAT --hwidth_lon HWIDTH_LON
+usage: create-rotated-grid [-h] (--grid_spacing GRID_SPACING | --dlon DLON --dlat DLAT) --center_lat CENTER_LAT --center_lon CENTER_LON --hwidth_lat HWIDTH_LAT --hwidth_lon HWIDTH_LON
                            --pole_lat POLE_LAT --pole_lon POLE_LON --ncells_boundary NCELLS_BOUNDARY --output OUTPUT
 
 Generate a rotated coordinate grid NetCDF file.
@@ -29,6 +35,8 @@ optional arguments:
   -h, --help            show this help message and exit
   --grid_spacing GRID_SPACING
                         Grid spacing in horizontal direction [km]
+  --dlon DLON           Grid spacing in longitude direction [degrees]
+  --dlat DLAT           Grid spacing in latitude direction [degrees]
   --center_lat CENTER_LAT
                         Center latitude of the domain
   --center_lon CENTER_LON
