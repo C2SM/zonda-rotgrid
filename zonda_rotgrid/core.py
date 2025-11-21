@@ -16,10 +16,16 @@ def compute_corner_offsets(step_x_deg, step_y_deg):
         [ half_x, -half_y],  # SE
     ])  # shape: (4, 2)
 
-def create_rotated_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth_lon, pole_lat, pole_lon, ncells_boundary, output_path):
-    # Convert grid spacing from km to degrees 
-    dx_deg = grid_spacing / 111.320
-    dy_deg = grid_spacing / 110.574
+def create_rotated_grid(grid_spacing=None, center_lat=None, center_lon=None, hwidth_lat=None, hwidth_lon=None, pole_lat=None, pole_lon=None, ncells_boundary=0, output_path=None, dlon=None, dlat=None):
+    # If dlon/dlat are provided, use them directly. Otherwise, use grid_spacing (km)
+    if dlon is not None and dlat is not None:
+        dx_deg = dlon
+        dy_deg = dlat
+    elif grid_spacing is not None:
+        dx_deg = grid_spacing / 111.320
+        dy_deg = grid_spacing / 110.574
+    else:
+        raise ValueError("Either grid_spacing (km) or dlon/dlat (degrees) must be provided.")
 
     polgam = 0.0  # Default value for north pole grid longitude
     rotated_crs = CRS.from_cf({
@@ -56,10 +62,8 @@ def create_rotated_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth
     lon_vertices = np.empty((ny, nx, nv))
     lat_vertices = np.empty((ny, nx, nv))
     for i in range(nv):
-        dlon = corner_offsets[i, 0]
-        dlat = corner_offsets[i, 1]
-        rlon_corner = rlon2d + dlon
-        rlat_corner = rlat2d + dlat
+        rlon_corner = rlon2d + corner_offsets[i, 0]
+        rlat_corner = rlat2d + corner_offsets[i, 1]
         flat_rlon = rlon_corner.flatten()
         flat_rlat = rlat_corner.flatten()
         flat_lon, flat_lat = transformer.transform(flat_rlon, flat_rlat)
@@ -133,15 +137,22 @@ def create_rotated_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth
         f"Created with zonda-rotgrid v{version} on {__import__('datetime').datetime.now().isoformat()}"
     )
     ds.attrs["install_command"] = f"pip install zonda-rotgrid=={version}"
-    ds.attrs["creation_command"] = (
-        f"create-rotated-grid --grid_spacing {grid_spacing} --center_lat {center_lat} "
-        f"--center_lon {center_lon} --hwidth_lat {hwidth_lat} --hwidth_lon {hwidth_lon} "
-        f"--pole_lat {pole_lat} --pole_lon {pole_lon} --ncells_boundary {ncells_boundary} --output {output_path}"
-    )
+    if dlon is not None and dlat is not None:
+        ds.attrs["creation_command"] = (
+            f"create-rotated-grid --dlon {dlon} --dlat {dlat} --center_lat {center_lat} "
+            f"--center_lon {center_lon} --hwidth_lat {hwidth_lat} --hwidth_lon {hwidth_lon} "
+            f"--pole_lat {pole_lat} --pole_lon {pole_lon} --ncells_boundary {ncells_boundary} --output {output_path}"
+        )
+    else:
+        ds.attrs["creation_command"] = (
+            f"create-rotated-grid --grid_spacing {grid_spacing} --center_lat {center_lat} "
+            f"--center_lon {center_lon} --hwidth_lat {hwidth_lat} --hwidth_lon {hwidth_lon} "
+            f"--pole_lat {pole_lat} --pole_lon {pole_lon} --ncells_boundary {ncells_boundary} --output {output_path}"
+        )
     ds.to_netcdf(output_path)
     print(f"File '{output_path}' created.")
 
-def create_latlon_grid(grid_spacing, center_lat, center_lon, hwidth_lat, hwidth_lon, ncells_boundary, output_path):
+def create_latlon_grid(grid_spacing=None, center_lat=None, center_lon=None, hwidth_lat=None, hwidth_lon=None, ncells_boundary=0, output_path=None):
     # Convert grid spacing from km to degrees
     dx_deg = grid_spacing / 111.320
     dy_deg = grid_spacing / 110.574
