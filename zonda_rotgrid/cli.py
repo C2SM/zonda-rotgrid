@@ -22,8 +22,8 @@ def main_rotated():
 		if args.dlat is None:
 			parser.error("--dlat must be provided when using --dlon.")
 		create_rotated_grid(
-			dlon=args.dlon,
 			dlat=args.dlat,
+			dlon=args.dlon,
 			center_lat=args.center_lat,
 			center_lon=args.center_lon,
 			hwidth_lat=args.hwidth_lat,
