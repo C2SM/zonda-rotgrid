@@ -119,7 +119,7 @@ def create_rotated_grid(grid_spacing=None, dlat=None, dlon=None, center_lat=None
         "grid_mapping": "rotated_pole"
     })
     ds["rotated_pole"] = xr.DataArray(
-        '',
+        np.array('', dtype='S1'),
         attrs={
             "long_name": "coordinates of the rotated North Pole",
             "grid_mapping_name": "rotated_latitude_longitude",
