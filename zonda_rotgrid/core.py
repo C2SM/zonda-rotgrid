@@ -16,7 +16,7 @@ def compute_corner_offsets(step_x_deg, step_y_deg):
         [ half_x, -half_y],  # SE
     ])  # shape: (4, 2)
 
-def create_rotated_grid(grid_spacing=None, center_lat=None, center_lon=None, hwidth_lat=None, hwidth_lon=None, pole_lat=None, pole_lon=None, ncells_boundary=0, output_path=None, dlon=None, dlat=None):
+def create_rotated_grid(grid_spacing=None, dlat=None, dlon=None, center_lat=None, center_lon=None, hwidth_lat=None, hwidth_lon=None, pole_lat=None, pole_lon=None, ncells_boundary=0, output_path=None):
     # If dlon/dlat are provided, use them directly. Otherwise, use grid_spacing (km)
     if dlon is not None and dlat is not None:
         dx_deg = dlon
@@ -119,7 +119,7 @@ def create_rotated_grid(grid_spacing=None, center_lat=None, center_lon=None, hwi
         "grid_mapping": "rotated_pole"
     })
     ds["rotated_pole"] = xr.DataArray(
-        0,
+        np.array('', dtype='S1'),
         attrs={
             "long_name": "coordinates of the rotated North Pole",
             "grid_mapping_name": "rotated_latitude_longitude",
